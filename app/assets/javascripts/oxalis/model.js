@@ -285,10 +285,10 @@ export class OxalisModel {
     }
 
     if (error) {
+      console.error(error);
       Toast.error(error);
       throw this.HANDLED_ERROR;
     }
-
     const [dataset, highestResolutions] = adaptResolutions(rawDataset);
 
     // Make sure subsequent fetch calls are always for the same dataset

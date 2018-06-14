@@ -115,6 +115,8 @@ services:
           -Dapplication.insertInitialData=false"
     environment:
       - POSTGRES_URL=jdbc:postgresql://postgres/webknossos_testing
+    volumes:
+      - ./binaryData:/srv/webknossos-datastore/binaryData
 
   postgres:
     image: postgres:10-alpine

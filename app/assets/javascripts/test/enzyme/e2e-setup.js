@@ -74,6 +74,7 @@ const jsdom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://example.org/",
 });
 const { window } = jsdom;
+window.WebGLRenderingContext = {};
 
 function copyProps(src, target) {
   const props = {};

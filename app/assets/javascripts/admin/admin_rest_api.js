@@ -609,10 +609,10 @@ export async function updateDatasetTeams(
   });
 }
 
-export async function triggerDatasetCheck(datatstoreHost: string): Promise<void> {
+export async function triggerDatasetCheck(datastoreHost: string): Promise<void> {
   await doWithToken(token =>
     Request.triggerRequest(`/data/triggers/checkInboxBlocking?token=${token}`, {
-      host: datatstoreHost,
+      host: datastoreHost,
     }),
   );
 }

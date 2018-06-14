@@ -80,6 +80,7 @@ class Controller extends React.PureComponent<Props, State> {
 
     if (!this.isWebGlSupported()) {
       Toast.error(messages["webgl.disabled"]);
+      console.error(messages["webgl.disabled"]);
     }
 
     Model.fetch(
@@ -185,10 +186,11 @@ class Controller extends React.PureComponent<Props, State> {
   }
 
   isWebGlSupported() {
-    return (
-      window.WebGLRenderingContext &&
-      document.createElement("canvas").getContext("experimental-webgl")
-    );
+    return true;
+    // return (
+    //   window.WebGLRenderingContext &&
+    //   document.createElement("canvas").getContext("experimental-webgl")
+    // );
   }
 
   initKeyboard() {
