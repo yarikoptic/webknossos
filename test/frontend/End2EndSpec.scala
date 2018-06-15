@@ -25,9 +25,7 @@ class End2EndSpec(arguments: Arguments) extends Specification with LazyLogging {
   val argumentMapRead = parseCustomJavaArgs(arguments)
   val testPort = 9000
   val argumentMap = argumentMapRead +
-                 ("http.port"    -> testPort,
-                  "play.http.router" -> "webknossos.Routes"
-                 )
+                 ("http.port"    -> testPort)
 
   "my application" should {
 

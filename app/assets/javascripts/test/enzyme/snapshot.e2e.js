@@ -3,7 +3,14 @@
 /* eslint-disable import/first */
 
 // This needs to be the very first import
-import { createSnapshotable, debugWrapper, waitForAllRequests, resetDatabase } from "./e2e-setup";
+import {
+  createSnapshotable,
+  debugWrapper,
+  waitForAllRequests,
+  resetDatabase,
+  tokenUserA,
+  setCurrToken,
+} from "./e2e-setup";
 import _ from "lodash";
 import { mount } from "enzyme";
 import test from "ava";
@@ -53,9 +60,7 @@ const Dashboard = mockRequire.reRequire("../../dashboard/dashboard_view").defaul
 const UserListView = mockRequire.reRequire("../../admin/user/user_list_view").default;
 const Store = mockRequire.reRequire("../../oxalis/throttled_store").default;
 const { setActiveUserAction } = mockRequire.reRequire("../../oxalis/model/actions/user_actions");
-const { getActiveUser, triggerDatasetCheck, getDatasets } = mockRequire.reRequire(
-  "../../admin/admin_rest_api",
-);
+const api = mockRequire.reRequire("../../admin/admin_rest_api");
 // Cannot be rendered for some reason
 const TracingLayoutView = mockRequire.reRequire("../../oxalis/view/tracing_layout_view").default;
 
@@ -67,8 +72,10 @@ test.before(() => {
 
 test.beforeEach(async __ => {
   // There needs to be an active user in the store for the pages to render correctly
-  const user = await getActiveUser();
+  const user = await api.getActiveUser();
+  console.log("USER", user);
   Store.dispatch(setActiveUserAction(user));
+  setCurrToken(tokenUserA);
 });
 
 // test("Dashboard", async t => {
@@ -151,7 +158,6 @@ test("Tracing View", async t => {
   process.on("unhandledRejection", (err, promise) => {
     console.error("###### Unhandled rejection (promise: ", promise, ", reason: ", err, ").");
   });
-  await Utils.sleep(2000);
   const annotationId = "570b9ff12a7c0e980056fe8f";
   const tracingView = mount(
     <Provider store={Store}>
@@ -165,9 +171,8 @@ test("Tracing View", async t => {
     </Provider>,
   );
   await waitForAllRequests(tracingView);
-  await Utils.sleep(5000);
-  await triggerDatasetCheck("http://localhost:9000");
-  console.log(await getDatasets());
+  await api.triggerDatasetCheck("http://localhost:9000");
+  console.log(await api.getActiveDatasets());
   t.is(tracingView.find(".TestTracingView").length, 1);
   debugWrapper(tracingView, "TracingView");
   t.snapshot(createSnapshotable(tracingView), { id: "TracingView" });
