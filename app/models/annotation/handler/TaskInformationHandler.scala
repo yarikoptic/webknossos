@@ -12,31 +12,32 @@ import utils.ObjectId
 
 object TaskInformationHandler extends AnnotationInformationHandler with FoxImplicits {
 
-  def provideAnnotation(taskId: String, userOpt: Option[User])(implicit ctx: DBAccessContext): Fox[Annotation] =
+  override def provideAnnotation(taskId: ObjectId, userOpt: Option[User])(implicit ctx: DBAccessContext): Fox[AnnotationSQL] =
     for {
-      task <- TaskSQLDAO.findOne(ObjectId(taskId)) ?~> "task.notFound"
+      task <- TaskSQLDAO.findOne(taskId) ?~> "task.notFound"
       annotations <- task.annotations
       finishedAnnotations = annotations.filter(_.state == Finished)
       _ <- assertAllOnSameDataset(finishedAnnotations)
       _ <- assertNonEmpty(finishedAnnotations) ?~> "task.noAnnotations"
       user <- userOpt ?~> "user.notAuthorised"
       project <- ProjectSQLDAO.findOne(task._project)
-      teamIdBson <- project._team.toBSONObjectId.toFox
-      dataSetName = finishedAnnotations.head.dataSetName
-      taskIdBson <- task._id.toBSONObjectId.toFox
-      mergedAnnotation <- AnnotationMerger.mergeN(taskIdBson, persistTracing=false, user._id,
-        dataSetName, teamIdBson, AnnotationType.CompoundTask, finishedAnnotations) ?~> "annotation.merge.failed.compound"
+      _dataSet = finishedAnnotations.head._dataSet
+      mergedAnnotation <- AnnotationMerger.mergeN(task._id, persistTracing=false, ObjectId.fromBsonId(user._id),
+        _dataSet, project._team, AnnotationTypeSQL.CompoundTask, finishedAnnotations) ?~> "annotation.merge.failed.compound"
     } yield mergedAnnotation
 
-  def restrictionsFor(taskId: String)(implicit ctx: DBAccessContext) =
+  def restrictionsFor(taskId: ObjectId)(implicit ctx: DBAccessContext) =
     for {
-      task <- TaskSQLDAO.findOne(ObjectId(taskId)) ?~> "task.notFound"
+      task <- TaskSQLDAO.findOne(taskId) ?~> "task.notFound"
       project <- ProjectSQLDAO.findOne(task._project)
       teamIdBson <- project._team.toBSONObjectId.toFox
     } yield {
       new AnnotationRestrictions {
-        override def allowAccess(user: Option[User]) =
-          user.exists(_.isTeamManagerOfBLOCKING(teamIdBson))
+        override def allowAccess(userOption: Option[User]): Fox[Boolean] =
+          (for {
+            user <- userOption.toFox
+            allowed <- user.isTeamManagerOrAdminOf(teamIdBson)
+          } yield allowed).orElse(Fox.successful(false))
       }
     }
 }

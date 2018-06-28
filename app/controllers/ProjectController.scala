@@ -5,7 +5,6 @@ package controllers
 import javax.inject.Inject
 import com.scalableminds.util.reactivemongo.GlobalAccessContext
 import com.scalableminds.util.tools.{Fox, FoxImplicits}
-import models.annotation.AnnotationDAO
 import models.project._
 import models.task._
 import models.user.UserDAO
@@ -88,7 +87,7 @@ class ProjectController @Inject()(val messagesApi: MessagesApi) extends Controll
         project <- ProjectSQLDAO.findOneByName(projectName)(GlobalAccessContext) ?~> Messages("project.notFound", projectName)
         teamIdBson <- project._team.toBSONObjectId.toFox
         _ <- request.identity.assertTeamManagerOrAdminOf(teamIdBson) ?~> Messages("team.notAllowed")
-        _ <- ProjectSQLDAO.updateOne(updateRequest.copy(_id = project._id)) ?~> Messages("project.update.failed", projectName)
+        _ <- ProjectSQLDAO.updateOne(updateRequest.copy(_id = project._id, paused = project.paused)) ?~> Messages("project.update.failed", projectName)
         updated <- ProjectSQLDAO.findOneByName(projectName)
         js <- updated.publicWrites
       } yield Ok(js)

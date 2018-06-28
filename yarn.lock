@@ -229,6 +229,10 @@
   version "8.10.17"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-8.10.17.tgz#d48cf10f0dc6dcf59f827f5a3fc7a4a6004318d3"
 
+Enumjs@scalableminds/Enumjs:
+  version "1.0.2"
+  resolved "https://codeload.github.com/scalableminds/Enumjs/tar.gz/68b4000da50e30e00d11dcd5a060e6d37659d18c"
+
 JSONStream@^1.0.3:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/JSONStream/-/JSONStream-1.3.2.tgz#c102371b6ec3a7cf3b847ca00c20bb0fce4c6dea"
@@ -9065,9 +9069,9 @@ scoped-regex@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/scoped-regex/-/scoped-regex-1.0.0.tgz#a346bb1acd4207ae70bd7c0c7ca9e566b6baddb8"
 
-scroll-into-view-if-needed@1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/scroll-into-view-if-needed/-/scroll-into-view-if-needed-1.4.1.tgz#763580091fb8e0bd4dc2d68b475d755f66574a0e"
+scroll-into-view-if-needed@2.2.8:
+  version "2.2.8"
+  resolved "https://registry.yarnpkg.com/scroll-into-view-if-needed/-/scroll-into-view-if-needed-2.2.8.tgz#c22ffbddce5c8a31949ab3e01c27a6c29ba7b979"
 
 semver-compare@^1.0.0:
   version "1.0.0"
