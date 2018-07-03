@@ -8,21 +8,21 @@ function getRenderer() {
   if (renderer != null) {
     return renderer;
   }
-  renderer =
-    typeof document !== "undefined" && document.getElementById
-      ? new THREE.WebGLRenderer({
-          canvas: document.getElementById("render-canvas"),
-          antialias: true,
-        })
-      : new THREE.WebGLRenderer({
-          antialias: false,
-          canvas: {
-            addEventListener: () => {},
-          },
-          context: GL(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_WIDTH, {
-            preserveDrawingBuffer: true,
-          }),
-        });
+  renderer = false
+    ? new THREE.WebGLRenderer({
+        canvas: document.getElementById("render-canvas"),
+        antialias: true,
+      })
+    : new THREE.WebGLRenderer({
+        antialias: false,
+        canvas: {
+          addEventListener: () => {},
+          style: {},
+        },
+        context: GL(Constants.VIEWPORT_WIDTH, Constants.VIEWPORT_WIDTH, {
+          preserveDrawingBuffer: true,
+        }),
+      });
 
   return renderer;
 }

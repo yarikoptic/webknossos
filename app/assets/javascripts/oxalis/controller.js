@@ -126,7 +126,7 @@ class Controller extends React.PureComponent<Props, State> {
     this.stats = new Stats();
     document.body.append(this.stats.domElement);
 
-    this.initKeyboard();
+    // this.initKeyboard();
     this.initTaskScript();
     this.maybeShowNewTaskTypeModal();
 

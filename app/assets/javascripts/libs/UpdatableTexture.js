@@ -1,5 +1,13 @@
 import * as THREE from "three";
 
+class ImageData {
+  constructor(arr, width, height) {
+    this.arr = arr;
+    this.width = width;
+    this.height = height;
+  }
+}
+
 function UpdatableTexture(
   width,
   height,
@@ -27,11 +35,12 @@ function UpdatableTexture(
     encoding,
   );
 
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  const imageData = ctx.createImageData(1, 1);
+  // const canvas = document.createElement("canvas");
+  // canvas.width = width;
+  // canvas.height = height;
+  // const ctx = canvas.getContext("2d");
+  // const imageData = ctx.createImageData(1, 1);
+  const imageData = new ImageData(new Uint8ClampedArray([0, 0, 0, 0]), 1, 1);
 
   this.image = imageData;
 

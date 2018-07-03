@@ -9,7 +9,7 @@ type GpuSpecs = {
 
 export function getSupportedTextureSpecs(): GpuSpecs {
   const canvas = document.createElement("canvas");
-  const contextProvider = canvas.getContext
+  const contextProvider = false
     ? x => canvas.getContext(x)
     : ctxName => ({
         MAX_TEXTURE_SIZE: 0,

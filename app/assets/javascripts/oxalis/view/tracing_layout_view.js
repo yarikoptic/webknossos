@@ -46,8 +46,9 @@ class TracingLayoutView extends React.PureComponent<Props, State> {
     });
   };
 
-  componentDidCatch() {
+  componentDidCatch(error, info) {
     Toast.error(messages["react.rendering_error"]);
+    console.error("### REACT ERROR", messages["react.rendering_error"], error, info);
   }
 
   render() {

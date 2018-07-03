@@ -14,6 +14,8 @@ additionalParams=$@
 
 function prepare {
   rm -rf "$testBundlePath" && BABEL_ENV=test babel "$jsPath" --out-dir "$testBundlePath" $additionalParams
+  pbjs -t json "webknossos-datastore/proto/SkeletonTracing.proto" > "$testBundlePath/SkeletonTracing.proto.json"
+  pbjs -t json "webknossos-datastore/proto/VolumeTracing.proto" > "$testBundlePath/VolumeTracing.proto.json"
 }
 
 function ensureUpToDateTests {
@@ -38,7 +40,7 @@ then
 elif [ $cmd == "test-e2e" ]
 then
   ensureUpToDateTests
-  export NODE_PATH="$testBundlePath" && BABEL_ENV=test ava $(find "$testBundlePath" -name "snapshot.e2e.js") --serial "$@"
+  export NODE_PATH="$testBundlePath" && BABEL_ENV=test xvfb-run -s "-ac -screen 0 1280x1024x24" ava $(find "$testBundlePath" -name "snapshot.e2e.js") --serial "$@"
 elif [ $cmd == "prepare" ]
 then
   prepare "$@"

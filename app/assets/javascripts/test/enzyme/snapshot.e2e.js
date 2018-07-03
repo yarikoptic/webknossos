@@ -19,9 +19,11 @@ import React from "react";
 import { Provider } from "react-redux";
 import { Router } from "react-router-dom";
 import createBrowserHistory from "history/createBrowserHistory";
-import { ControlModeEnum } from "oxalis/constants";
+import Constants, { ControlModeEnum } from "oxalis/constants";
 import { APITracingTypeEnum } from "admin/api_flow_types";
 import Utils from "libs/utils";
+import { dumpToPng } from "test/shaders/shader_test_utils";
+import { getRenderer } from "oxalis/controller/renderer";
 
 // Those wrappers interfere with global.window and global.document otherwise
 mockRequire("libs/hammerjs_wrapper", {});
@@ -158,22 +160,32 @@ test("Tracing View", async t => {
   process.on("unhandledRejection", (err, promise) => {
     console.error("###### Unhandled rejection (promise: ", promise, ", reason: ", err, ").");
   });
-  const annotationId = "570b9ff12a7c0e980056fe8f";
+
+  await api.triggerDatasetCheck("http://localhost:9000");
+  const datasets = await api.getActiveDatasets();
+  const datasetName = datasets[0].name;
+
+  const createdExplorational = await api.createExplorational(datasetName, "skeleton", false);
   const tracingView = mount(
     <Provider store={Store}>
       <Router history={browserHistory}>
         <TracingLayoutView
           initialTracingType={APITracingTypeEnum.Explorational}
-          initialAnnotationId={annotationId}
+          initialAnnotationId={createdExplorational.id}
           initialControlmode={ControlModeEnum.TRACE}
         />
       </Router>
     </Provider>,
   );
+
   await waitForAllRequests(tracingView);
-  await api.triggerDatasetCheck("http://localhost:9000");
-  console.log(await api.getActiveDatasets());
-  t.is(tracingView.find(".TestTracingView").length, 1);
+
   debugWrapper(tracingView, "TracingView");
-  t.snapshot(createSnapshotable(tracingView), { id: "TracingView" });
+  t.is(tracingView.find(".TestTracingView").length, 1);
+
+  const gl = getRenderer().context;
+  const canvasWidth = 2 * Constants.VIEWPORT_WIDTH + Constants.VIEWPORT_GAP_WIDTH;
+  await dumpToPng(gl, canvasWidth, canvasWidth);
+
+  // t.snapshot(createSnapshotable(tracingView), { id: "TracingView" });
 });

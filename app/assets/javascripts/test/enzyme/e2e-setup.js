@@ -66,6 +66,7 @@ global.Request = Request;
 global.Response = Response;
 global.FetchError = FetchError;
 
+// const canvas = require("canvas");
 const { JSDOM } = require("jsdom");
 
 // set pretendToBeVisual to true, so that window.requestAnimationFrame is available from JSDOM
@@ -74,7 +75,7 @@ const jsdom = new JSDOM("<!doctype html><html><body></body></html>", {
   url: "http://example.org/",
 });
 const { window } = jsdom;
-window.WebGLRenderingContext = {};
+// window.WebGLRenderingContext = {};
 
 function copyProps(src, target) {
   const props = {};

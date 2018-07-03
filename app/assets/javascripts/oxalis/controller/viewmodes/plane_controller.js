@@ -322,7 +322,7 @@ class PlaneController extends React.PureComponent<Props> {
     SceneController.startPlaneMode();
     this.planeView.start();
 
-    this.initKeyboard();
+    // this.initKeyboard();
     this.init();
     this.isStarted = true;
 

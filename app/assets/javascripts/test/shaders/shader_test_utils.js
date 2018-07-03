@@ -9,8 +9,12 @@ import compileShader from "oxalis/shaders/shader_module_system";
 
 import type { ShaderModuleType } from "oxalis/shaders/shader_module_system";
 
-export const dumpToPng = (gl: GL, width: number, height: number) => {
-  const path = "out.png";
+export const dumpToPng = async (
+  gl: GL,
+  width: number,
+  height: number,
+  path: string = "out.png",
+) => {
   const png = new PNG({
     width,
     height,
@@ -35,7 +39,13 @@ export const dumpToPng = (gl: GL, width: number, height: number) => {
 
   const stream = fs.createWriteStream(path);
   png.pack().pipe(stream);
-  stream.on("close", () => console.log(`Image written: ${path}`));
+
+  return new Promise(resolve => {
+    stream.on("close", () => {
+      console.log(`Image written: ${path}`);
+      resolve();
+    });
+  });
 };
 
 export function renderShader(fragColorExpr: string, shaderModule: ShaderModuleType) {
@@ -108,7 +118,7 @@ export function renderShader(fragColorExpr: string, shaderModule: ShaderModuleTy
   console.time("render and read");
   renderer.render(scene, camera, rtTexture, true);
 
-  // dumpToPng(gl, width, height);
+  // await dumpToPng(gl, width, height);
 
   const pixels = new Uint8Array(4 * canvasWidth * canvasHeight);
 

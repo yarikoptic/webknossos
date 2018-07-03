@@ -12,6 +12,7 @@ import Constants, { OrthoViews, OrthoViewValues, OrthoViewColors } from "oxalis/
 import { listenToStoreProperty } from "oxalis/model/helpers/listener_helpers";
 import type { OrthoViewType, OrthoViewMapType, Vector2 } from "oxalis/constants";
 import SceneController from "oxalis/controller/scene_controller";
+import { dumpToPng } from "test/shaders/shader_test_utils";
 
 class PlaneView {
   // Copied form backbone events (TODO: handle this better)
@@ -157,6 +158,7 @@ class PlaneView {
           OrthoViewColors[plane],
         );
         renderer.render(scene, this.cameras[plane]);
+        dumpToPng(renderer.context, this.curWidth, this.curWidth, `${plane}.png`);
       }
 
       this.needsRerender = false;
