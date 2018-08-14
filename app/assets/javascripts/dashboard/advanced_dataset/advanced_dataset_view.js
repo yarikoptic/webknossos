@@ -102,17 +102,25 @@ class AdvancedDatasetView extends React.PureComponent<Props, State> {
             .value()
         : dataSourceSortedByRank;
 
+    // expandedRowRender={
+    //   isUserAdmin ? dataset => <DatasetAccessListView dataset={dataset} /> : null
+    // }
     return (
       <div className="TestAdvancedDatasetView">
         <Table
-          dataSource={sortedDataSource}
+          dataSource={sortedDataSource.map(el => ({
+            ...el,
+            name: "ROI2017",
+            children: [
+              { ...el, name: "ROI2017_Segmentation_A" },
+              { ...el, name: "ROI2017_Segmentation_B" },
+              { ...el, name: "ROI2017_Segmentation_C" },
+            ],
+          }))}
           rowKey="name"
           pagination={{
             defaultPageSize: 50,
           }}
-          expandedRowRender={
-            isUserAdmin ? dataset => <DatasetAccessListView dataset={dataset} /> : null
-          }
           onChange={this.handleChange}
         >
           <Column
@@ -122,13 +130,13 @@ class AdvancedDatasetView extends React.PureComponent<Props, State> {
             sorter={Utils.localeCompareBy(typeHint, dataset => dataset.name)}
             sortOrder={sortedInfo.columnKey === "name" && sortedInfo.order}
             render={(name: string, dataset: APIDatasetType) => (
-              <div>
+              <React.Fragment>
                 {dataset.name}
                 <br />
                 <Tag color={TemplateHelpers.stringToColor(dataset.dataStore.name)}>
                   {dataset.dataStore.name}
                 </Tag>
-              </div>
+              </React.Fragment>
             )}
           />
           <Column
