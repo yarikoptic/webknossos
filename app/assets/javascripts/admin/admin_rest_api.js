@@ -428,6 +428,10 @@ export async function getUsersWithActiveTasks(
   return Request.receiveJSON(`/api/projects/${projectName}/usersWithActiveTasks`);
 }
 
+export async function getExperienceDomains() {
+  // here do some stuff to fetch the data needed
+}
+
 // ### Annotations
 export function getCompactAnnotations(
   isFinished: boolean,

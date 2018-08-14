@@ -2,22 +2,11 @@
 import _ from "lodash";
 import React from "react";
 import { withRouter } from "react-router-dom";
-import {
-  Form,
-  Input,
-  Select,
-  Button,
-  Card,
-  Radio,
-  Upload,
-  Modal,
-  Icon,
-  InputNumber,
-  Spin,
-} from "antd";
+import { Form, Select, Button, Card, Radio, Upload, Modal, Icon, InputNumber, Spin } from "antd";
 import {
   getActiveDatasets,
   getProjects,
+  getExperienceDomains,
   getScripts,
   getTaskTypes,
   getTask,
@@ -51,6 +40,7 @@ type Props = {
 type State = {
   datasets: Array<APIDatasetType>,
   taskTypes: Array<APITaskTypeType>,
+  experienceDomains: Array<string>,
   projects: Array<APIProjectType>,
   scripts: Array<APIScriptType>,
   isNMLSpecification: boolean,
@@ -117,6 +107,7 @@ class TaskCreateFormView extends React.PureComponent<Props, State> {
     const [datasets, projects, scripts, taskTypes] = await Promise.all([
       getActiveDatasets(),
       getProjects(),
+      getExperienceDomains(),
       getScripts(),
       getTaskTypes(),
     ]);
@@ -201,6 +192,7 @@ class TaskCreateFormView extends React.PureComponent<Props, State> {
 
     const fullWidth = { width: "100%" };
 
+    // here!!!!!!
     return (
       <div className="container" style={{ paddingTop: 20 }}>
         <Spin spinning={this.state.isUploading}>
@@ -230,7 +222,20 @@ class TaskCreateFormView extends React.PureComponent<Props, State> {
               <FormItem label="Experience Domain" hasFeedback>
                 {getFieldDecorator("neededExperience.domain", {
                   rules: [{ required: true }, { min: 3 }],
-                })(<Input disabled={isEditingMode} />)}
+                })(
+                  <Select
+                    mode="tags"
+                    placeholder="Select or enter a Experience Domain"
+                    style={fullWidth}
+                    disabled={isEditingMode}
+                  >
+                    {this.state.taskTypes.map((taskType: APITaskTypeType) => (
+                      <Option key={taskType.id} value={taskType.id}>
+                        {taskType.summary}
+                      </Option>
+                    ))}
+                  </Select>,
+                )}
               </FormItem>
 
               <FormItem label="Experience Value" hasFeedback>
