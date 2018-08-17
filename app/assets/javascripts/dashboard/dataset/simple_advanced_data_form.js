@@ -44,7 +44,7 @@ export default function SimpleAdvancedDataForm({
             checkedChildren="Advanced"
             unCheckedChildren="Simple"
             checked={activeDataSourceEditMode === "advanced"}
-            disabled={isJSONInvalid}
+            disabled={true || isJSONInvalid}
             style={{ marginBottom: 6 }}
             onChange={bool => {
               const key = bool ? "advanced" : "simple";
@@ -109,7 +109,7 @@ function SimpleDatasetForm({ form, dataSource }) {
                   ),
                 },
               ],
-            })(<Vector3Input style={{ width: 400 }} allowDecimals />)}
+            })(<Vector3Input disabled={true} style={{ width: 400 }} allowDecimals />)}
           </FormItemWithInfo>
         </List.Item>
       </List>
@@ -117,7 +117,7 @@ function SimpleDatasetForm({ form, dataSource }) {
       <List header={<div style={{ fontWeight: "bold" }}>Layers</div>}>
         {(dataSource || { dataLayers: [] }).dataLayers.map((layer, idx) => (
           <List.Item key={`layer-${layer.name}`}>
-            <SimpleLayerForm layer={layer} index={idx} form={form} />
+            <SimpleLayerForm disabled={true} layer={layer} index={idx} form={form} />
           </List.Item>
         ))}
       </List>
@@ -160,7 +160,7 @@ function SimpleLayerForm({ layer, index, form }) {
                 },
               ],
             },
-          )(<BoundingBoxInput style={{ width: 300 }} />)}
+          )(<BoundingBoxInput disabled={true} style={{ width: 300 }} />)}
         </FormItemWithInfo>
 
         {isSegmentation ? (
@@ -185,7 +185,7 @@ function SimpleLayerForm({ layer, index, form }) {
                         ),
                 },
               ],
-            })(<InputNumber />)}
+            })(<InputNumber disabled={true} />)}
           </FormItemWithInfo>
         ) : null}
       </Col>
