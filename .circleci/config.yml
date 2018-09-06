@@ -39,9 +39,9 @@ jobs:
             - "~/.yarn-cache"
 
       - save_cache:
-        key: node_modules-cache-{{ checksum "yarn.lock" }}
-        paths:
-          - "node_modules"
+          key: node_modules-cache-{{ checksum "yarn.lock" }}
+          paths:
+            - "node_modules"
 workflows:
   version: 2
   default:
