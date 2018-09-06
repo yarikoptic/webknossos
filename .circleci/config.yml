@@ -21,7 +21,9 @@ jobs:
           keys:
             - cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}
             - cache-{{ checksum ".circleci/cache_version" }}-master
-
+      - restore_cache:
+          keys:
+            - node_modules-cache-{{ checksum "yarn.lock" }}
       - run:
           name: Assert unique evolution numbers
           command: tools/postgres/assert_unique_evolution_numbers.sh
@@ -58,6 +60,11 @@ jobs:
             - "~/.ivy2"
             - "~/.sbt"
             - "~/.yarn-cache"
+
+      - save_cache:
+        key: node_modules-cache-{{ checksum "yarn.lock" }}
+        paths:
+          - "node_modules"
 
       - run:
           name: Build webknossos docker image
