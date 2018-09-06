@@ -27,6 +27,21 @@ jobs:
       - run:
           name: Install frontend dependencies
           command: docker-compose run base yarn install --frozen-lockfile
+
+      - save_cache:
+          key: cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - "project/target"
+            - "target"
+            - "~/.m2"
+            - "~/.ivy2"
+            - "~/.sbt"
+            - "~/.yarn-cache"
+
+      - save_cache:
+        key: node_modules-cache-{{ checksum "yarn.lock" }}
+        paths:
+          - "node_modules"
 workflows:
   version: 2
   default:
