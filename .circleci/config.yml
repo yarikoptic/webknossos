@@ -14,6 +14,8 @@ jobs:
           command: |
             docker pull scalableminds/webknossos-dev:$CIRCLE_BRANCH || true
             DEV_CACHE=$CIRCLE_BRANCH docker-compose build base
+            docker image save base -o base.tar base
+
       - run:
           name: Prepare dependency folders
           command: mkdir -p project/target target ~/.m2 ~/.ivy2 ~/.sbt ~/.yarn-cache
