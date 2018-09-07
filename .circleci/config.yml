@@ -1,12 +1,15 @@
+defaults: &defaults
+  machine: true
+  environment:
+    USER_NAME: circleci
+    USER_UID: 1001
+    USER_GID: 1001
+    TZ: Europe/Berlin
+
 version: 2
 jobs:
   build_test_deploy:
-    machine: true
-    environment:
-      USER_NAME: circleci
-      USER_UID: 1001
-      USER_GID: 1001
-      TZ: Europe/Berlin
+    <<: *defaults
     steps:
       - checkout
       - run:
@@ -63,11 +66,36 @@ jobs:
 
       - run:
           name: Build webknossos docker image
-          command: DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos
+          command: |
+            DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos
+            docker image save -o webknossos.tar scalableminds/webknossos:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
 
       - run:
           name: Build webknossos-datastore docker image
-          command: DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos-datastore
+          command: |
+            DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos-datastore
+            docker image save -o webknossos-datastore.tar scalableminds/webknossos-datastore:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
+
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - webknossos.tar
+            - webknossos-datastore.tar
+            - webknossos-dev.tar
+            - node_modules
+            - app
+  validate:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/project/restored_workspace
+
+      - run: |
+          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          docker image load -i webknossos-dev.tar
+          docker image load -i webknossos.tar
+          docker image load -i webknossos-datastore.tar
 
       - run:
           name: Lint frontend code
@@ -88,6 +116,19 @@ jobs:
       - run:
           name: Validate frontend types with flow
           command: docker-compose run base yarn flow
+
+  smoke_tests:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/project/restored_workspace
+
+      - run: |
+          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          docker image load -i webknossos-dev.tar
+          docker image load -i webknossos.tar
+          docker image load -i webknossos-datastore.tar
 
       - run:
           name: Start webknossos
@@ -114,6 +155,19 @@ jobs:
       - run:
           name: Stop webknossos-datastore
           command: docker-compose down --volumes --remove-orphans
+
+  push:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: ~/project/restored_workspace
+
+      - run: |
+          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          docker image load -i webknossos-dev.tar
+          docker image load -i webknossos.tar
+          docker image load -i webknossos-datastore.tar
 
       - run:
           name: Push docker images
@@ -158,3 +212,13 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - validate:
+          requires:
+            - build_test_deploy
+      - smoke_tests:
+          requires:
+            - build_test_deploy
+      - push:
+          requires:
+            - validate
+            - smoke_tests
