@@ -26,7 +26,9 @@ jobs:
           keys:
             - cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}
             - cache-{{ checksum ".circleci/cache_version" }}-master
-
+      - restore_cache:
+          keys:
+            - yarn-cache-{{ checksum "yarn.lock" }}
       - run:
           name: Assert unique evolution numbers
           command: tools/postgres/assert_unique_evolution_numbers.sh
@@ -62,6 +64,9 @@ jobs:
             - "~/.m2"
             - "~/.ivy2"
             - "~/.sbt"
+
+      - save_cache:
+          key: yarn-cache-{{ checksum "yarn.lock" }}
             - "~/.yarn-cache"
 
       - run:
@@ -76,26 +81,46 @@ jobs:
             DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos-datastore
             docker image save -o webknossos-datastore.tar scalableminds/webknossos-datastore:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
 
-      - persist_to_workspace:
-          root: ~/project
+      - save_cache:
+          key: node_modules-{{ checksum "yarn.lock" }}
           paths:
-            - webknossos.tar
-            - webknossos-datastore.tar
-            - webknossos-dev.tar
-            - node_modules
-            - app
+            - "node_modules"
+
+      - save_cache:
+          key: webknossos-tar-{{ .Revision }}
+          paths:
+            - "webknossos.tar"
+
+      - save_cache:
+          key: webknossos-datastore-tar-{{ .Revision }}
+          paths:
+            - "webknossos-datastore.tar"
+
+      - save_cache:
+          key: webknossos-dev-tar-{{ .Revision }}
+          paths:
+            - "webknossos-dev.tar"
+
   validate:
     <<: *defaults
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/project/restored_workspace
+      - checkout
+
+      - restore_cache:
+          keys:
+            - webknossos-dev-tar-{{ .Revision }}
+
+      - restore_cache:
+          keys:
+            - node_modules-{{ checksum "yarn.lock" }}
+
+      - restore_cache:
+          keys:
+            - cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}-{{ .Revision }}
 
       - run: |
           mv ~/project/restored_workspace/* ~/project
           docker image load -i webknossos-dev.tar
-          docker image load -i webknossos.tar
-          docker image load -i webknossos-datastore.tar
 
       - run:
           name: Lint frontend code
@@ -120,13 +145,17 @@ jobs:
   smoke_tests:
     <<: *defaults
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/project/restored_workspace
+      - checkout
+
+      - restore_cache:
+        keys:
+            - webknossos-tar-{{ .Revision }}
+      - restore_cache:
+        keys:
+            - webknossos-datastore-tar-{{ .Revision }}
 
       - run: |
           mv ~/project/restored_workspace/* ~/project
-          docker image load -i webknossos-dev.tar
           docker image load -i webknossos.tar
           docker image load -i webknossos-datastore.tar
 
@@ -159,9 +188,17 @@ jobs:
   push:
     <<: *defaults
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: ~/project/restored_workspace
+      - checkout
+
+      - restore_cache:
+        keys:
+            - webknossos-dev-tar-{{ .Revision }}
+      - restore_cache:
+        keys:
+            - webknossos-tar-{{ .Revision }}
+      - restore_cache:
+        keys:
+            - webknossos-datastore-tar-{{ .Revision }}
 
       - run: |
           mv ~/project/restored_workspace/* ~/project
