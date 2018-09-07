@@ -92,7 +92,7 @@ jobs:
           at: ~/project/restored_workspace
 
       - run: |
-          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          mv ~/project/restored_workspace/* ~/project
           docker image load -i webknossos-dev.tar
           docker image load -i webknossos.tar
           docker image load -i webknossos-datastore.tar
@@ -125,7 +125,7 @@ jobs:
           at: ~/project/restored_workspace
 
       - run: |
-          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          mv ~/project/restored_workspace/* ~/project
           docker image load -i webknossos-dev.tar
           docker image load -i webknossos.tar
           docker image load -i webknossos-datastore.tar
@@ -164,7 +164,7 @@ jobs:
           at: ~/project/restored_workspace
 
       - run: |
-          mv ~/project/restored_workspace/* ~/project/restored_workspace
+          mv ~/project/restored_workspace/* ~/project
           docker image load -i webknossos-dev.tar
           docker image load -i webknossos.tar
           docker image load -i webknossos-datastore.tar
