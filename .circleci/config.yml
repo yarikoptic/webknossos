@@ -83,7 +83,7 @@ jobs:
             docker image save -o webknossos-datastore.tar scalableminds/webknossos-datastore:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
 
       - save_cache:
-          key: node_modules-{{ checksum "yarn.lock" }}
+          key: v2-node_modules-{{ checksum "yarn.lock" }}
           paths:
             - "node_modules"
 
@@ -113,7 +113,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - node_modules-{{ checksum "yarn.lock" }}
+            - v2-node_modules-{{ checksum "yarn.lock" }}
 
       - restore_cache:
           keys:
@@ -148,11 +148,11 @@ jobs:
       - checkout
 
       - restore_cache:
-        keys:
-          - webknossos-tar-{{ .Revision }}
+          keys:
+            - webknossos-tar-{{ .Revision }}
       - restore_cache:
-        keys:
-           - webknossos-datastore-tar-{{ .Revision }}
+          keys:
+            - webknossos-datastore-tar-{{ .Revision }}
 
       - run: |
           docker image load -i webknossos.tar
@@ -190,13 +190,13 @@ jobs:
       - checkout
 
       - restore_cache:
-        keys:
+          keys:
             - webknossos-dev-tar-{{ .Revision }}
       - restore_cache:
-        keys:
+          keys:
             - webknossos-tar-{{ .Revision }}
       - restore_cache:
-        keys:
+          keys:
             - webknossos-datastore-tar-{{ .Revision }}
 
       - run: |
