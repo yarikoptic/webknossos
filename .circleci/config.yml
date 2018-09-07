@@ -67,6 +67,7 @@ jobs:
 
       - save_cache:
           key: yarn-cache-{{ checksum "yarn.lock" }}
+          paths:
             - "~/.yarn-cache"
 
       - run:
