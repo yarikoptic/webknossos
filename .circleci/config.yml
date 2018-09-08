@@ -13,28 +13,48 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
+      - run:
           name: Build webknossos-dev docker image
           command: |
             docker pull scalableminds/webknossos-dev:$CIRCLE_BRANCH || true
             DEV_CACHE=$CIRCLE_BRANCH docker-compose build base
             docker image save -o webknossos-dev.tar scalableminds/webknossos-dev
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - run:
           name: Prepare dependency folders
           command: mkdir -p project/target target ~/.m2 ~/.ivy2 ~/.sbt ~/.yarn-cache
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - restore_cache:
           keys:
             - cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}
             - cache-{{ checksum ".circleci/cache_version" }}-master
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - restore_cache:
           keys:
             - yarn-cache-{{ checksum "yarn.lock" }}
       - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
+      - run:
           name: Assert unique evolution numbers
           command: tools/postgres/assert_unique_evolution_numbers.sh
       - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
+      - run:
           name: Install frontend dependencies
           command: docker-compose run base yarn install --frozen-lockfile
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - run:
           name: Assert schema.sql and evolutions are equal
           command: |
@@ -42,8 +62,14 @@ jobs:
             sleep 3
             docker-compose run compile tools/postgres/diff_schema.js tools/postgres/schema.sql "conf/evolutions/*.sql"
       - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
+      - run:
           name: Build frontend documentation
           command: docker-compose run base yarn run docs
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - run:
           name: Build webknossos (sbt and webpack)
           command: |
@@ -53,9 +79,14 @@ jobs:
               docker-compose run compile sbt compile stage
             fi
       - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
+      - run:
           name: Build webknossos-datastore (sbt)
           command: docker-compose run base sbt "project webknossosDatastore" compile stage
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - save_cache:
           key: cache-{{ checksum ".circleci/cache_version" }}-{{ .Branch }}-{{ .Revision }}
           paths:
@@ -64,28 +95,40 @@ jobs:
             - "~/.m2"
             - "~/.ivy2"
             - "~/.sbt"
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - save_cache:
           key: yarn-cache-{{ checksum "yarn.lock" }}
           paths:
             - "~/.yarn-cache"
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - run:
           name: Build webknossos docker image
           command: |
             DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos
             docker image save -o webknossos.tar scalableminds/webknossos:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - run:
           name: Build webknossos-datastore docker image
           command: |
             DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos-datastore
             docker image save -o webknossos-datastore.tar scalableminds/webknossos-datastore:${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM}
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - save_cache:
           key: v2-node_modules-{{ checksum "yarn.lock" }}
           paths:
             - "node_modules"
+
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
 
       - save_cache:
           key: webknossos-tar-{{ .Revision }}
@@ -106,7 +149,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-
+      - run:
+          name: Look for changes in yarn.lock
+          command: git diff yarn.lock
       - restore_cache:
           keys:
             - webknossos-dev-tar-{{ .Revision }}
