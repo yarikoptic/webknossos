@@ -68,14 +68,13 @@ jobs:
           command: DOCKER_TAG=${CIRCLE_BRANCH}__${CIRCLE_BUILD_NUM} docker-compose build --pull webknossos-datastore
 
       - run:
-          name: Lint frontend code
-          command: docker-compose run base bash -c "yarn run lint && yarn run am-i-pretty"
-      - run:
-          name: Run frontend tests
-          command: docker-compose run base yarn test-verbose
-      - run:
-          name: Run backend tests
-          command: docker-compose run backend-tests
+          name: Lint frontend code & run frontend tests & run backend tests & run flow
+          command: |
+            parallel ::: \
+            "docker-compose run base bash -c "yarn run lint && yarn run am-i-pretty"" \
+            "docker-compose run base yarn test-verbose" \
+            "docker-compose run backend-tests" \
+            "docker-compose run base yarn flow"
       - run:
           name: Run end-to-end tests
           command: |
@@ -83,10 +82,6 @@ jobs:
               docker-compose run e2e-tests && s=0 && break || s=$?
             done
             (exit $s)
-      - run:
-          name: Validate frontend types with flow
-          command: docker-compose run base yarn flow
-
       - run:
           name: Start webknossos
           background: true
