@@ -71,10 +71,10 @@ jobs:
           name: Lint frontend code & run frontend tests & run backend tests & run flow
           command: |
             parallel -k ::: \
-            "docker-compose run base bash -c \"yarn run lint && yarn run am-i-pretty\"" \
-            "docker-compose run base yarn test-verbose" \
-            "docker-compose run backend-tests" \
-            "docker-compose run base yarn flow"
+            "docker-compose run --name lintContainer base bash -c \"yarn run lint && yarn run am-i-pretty\"" \
+            "docker-compose run --name ftestContainer base yarn test-verbose" \
+            "docker-compose run --name btestContainer backend-tests" \
+            "docker-compose run --name flowContainer base yarn flow"
       - run:
           name: Run end-to-end tests
           command: |
