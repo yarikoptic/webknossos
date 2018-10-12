@@ -10,6 +10,7 @@ import { listenToStoreProperty } from "oxalis/model/helpers/listener_helpers";
 import Store from "oxalis/store";
 import { PortalTarget, RenderToPortal } from "./portal_utils";
 import { layoutEmitter, getLayoutConfig } from "./layout_persistence";
+import { resetDefaultLayouts } from "./default_layout_configs";
 
 type Props<KeyType> = {
   id: string,
@@ -20,10 +21,10 @@ type Props<KeyType> = {
   style: Object,
 };
 
-const getGroundTruthLayoutRect = () => {
+export const getGroundTruthLayoutRect = () => {
   const mainContainer = document.querySelector(".ant-layout .ant-layout-has-sider");
   if (!mainContainer) {
-    return { width: 500, height: 500 };
+    return { width: undefined, height: undefined };
   }
   const { offsetWidth, offsetHeight } = mainContainer;
   // The -1s are a workaround, since otherwise scrollbars
@@ -31,9 +32,17 @@ const getGroundTruthLayoutRect = () => {
   return { width: offsetWidth - 1, height: offsetHeight - 1 };
 };
 
+function preventUndefinedRect(rect: Object) {
+  if (rect.height === undefined || rect.width === undefined) {
+    // use fallback values
+    return { height: 500, width: 500 };
+  }
+  return rect;
+}
+
 export const getDesiredLayoutRect = () => {
   const { layoutScaleValue } = Store.getState().userConfiguration;
-  const { width, height } = getGroundTruthLayoutRect();
+  const { width, height } = preventUndefinedRect(getGroundTruthLayoutRect());
   return {
     width: width * layoutScaleValue,
     height: height * layoutScaleValue,
@@ -46,7 +55,7 @@ const monkeypatchGLSizeGetter = gl => {
     if (value) {
       return _oldWidth.call(gl, value);
     } else {
-      const { width } = getGroundTruthLayoutRect();
+      const { width } = preventUndefinedRect(getGroundTruthLayoutRect());
       return width * Store.getState().userConfiguration.layoutScaleValue;
     }
   };
@@ -55,7 +64,7 @@ const monkeypatchGLSizeGetter = gl => {
     if (value) {
       return _oldHeight.call(gl, value);
     } else {
-      const { height } = getGroundTruthLayoutRect();
+      const { height } = preventUndefinedRect(getGroundTruthLayoutRect());
       return height * Store.getState().userConfiguration.layoutScaleValue;
     }
   };
@@ -66,7 +75,7 @@ const updateSizeForGl = gl => {
   if (!container) {
     return;
   }
-  const { width, height } = getGroundTruthLayoutRect();
+  const { width, height } = preventUndefinedRect(getGroundTruthLayoutRect());
   const layoutScale = Store.getState().userConfiguration.layoutScaleValue;
   container.style.width = `${Math.floor(width * layoutScale)}px`;
   container.style.height = `${Math.floor(height * layoutScale)}px`;
@@ -122,7 +131,10 @@ export class GoldenLayoutAdapter extends React.PureComponent<Props<*>, *> {
     const updateSizeDebounced = _.debounce(updateSize, Constants.RESIZE_THROTTLE_TIME / 5);
     window.addEventListener("resize", updateSize);
     const unbindResizeListener = () => window.removeEventListener("resize", updateSize);
-    const unbindResetListener = layoutEmitter.on("resetLayout", () => this.rebuildLayout());
+    const unbindResetListener = layoutEmitter.on("resetLayout", () => {
+      resetDefaultLayouts();
+      this.rebuildLayout();
+    });
     const unbindChangedScaleListener = listenToStoreProperty(
       store => store.userConfiguration.layoutScaleValue,
       () => {

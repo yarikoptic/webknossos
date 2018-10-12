@@ -32,6 +32,7 @@ type Props = {
 type State = {
   version: ?string,
 };
+export const navbarHeight = 48;
 
 class Navbar extends React.PureComponent<Props, State> {
   state = {
@@ -59,7 +60,7 @@ class Navbar extends React.PureComponent<Props, State> {
       position: "fixed",
       width: "100%",
       zIndex: 1000,
-      height: 48,
+      height: navbarHeight,
       display: "flex",
       alignItems: "center",
       color: "rgba(255, 255, 255, 0.67)",
