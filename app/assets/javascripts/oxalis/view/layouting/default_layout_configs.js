@@ -10,6 +10,7 @@ import _ from "lodash";
 import type { ControlMode, Mode } from "oxalis/constants";
 import Constants, { ControlModeEnum } from "oxalis/constants";
 import { navbarHeight } from "navbar";
+import { headerHeight } from "oxalis/view/layouting/tracing_layout_view";
 import { Pane, Column, Row, Stack } from "./golden_layout_helpers";
 import { getGroundTruthLayoutRect } from "./golden_layout_adapter";
 
@@ -78,6 +79,7 @@ const unmemoizedGetDefaultLayouts = () => {
       width = 500;
     }
   }
+  height -= headerHeight;
   const viewportWidth = Math.min(((height / 2) * 100) / width, 40);
   const OrthoViewsGrid = [
     setGlContainerWidth(Column(Panes.xy, Panes.xz), viewportWidth),

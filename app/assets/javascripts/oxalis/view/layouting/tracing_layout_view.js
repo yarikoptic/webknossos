@@ -22,7 +22,7 @@ import TreesTabView, { importNmls } from "oxalis/view/right-menu/trees_tab_view"
 import MappingInfoView from "oxalis/view/right-menu/mapping_info_view";
 import DatasetInfoTabView from "oxalis/view/right-menu/dataset_info_tab_view";
 import InputCatcher, { recalculateInputCatcherSizes } from "oxalis/view/input_catcher";
-import Constants, { ArbitraryViewport, OrthoViews } from "oxalis/constants";
+import { ArbitraryViewport, OrthoViews } from "oxalis/constants";
 import type { OxalisState, TracingTypeTracing, TraceOrViewCommand } from "oxalis/store";
 import type { Mode } from "oxalis/constants";
 import RecordingSwitch from "oxalis/view/recording_switch";
@@ -33,6 +33,8 @@ import { storeLayoutConfig, setActiveLayout } from "./layout_persistence";
 import { determineLayout } from "./default_layout_configs";
 
 const { Header, Sider } = Layout;
+
+export const headerHeight = 50;
 
 type StateProps = {
   viewMode: Mode,
@@ -70,59 +72,59 @@ class TracingLayoutView extends React.PureComponent<Props, State> {
     if (
       props.storedLayouts.LastActiveLayouts &&
       props.storedLayouts.LastActiveLayouts[layoutType]
-      ) {
-        lastActiveLayout = props.storedLayouts.LastActiveLayouts[layoutType];
-      } else {
-        // added as a valide fallback when there are no stored last active layouts
-        const firstStoredLayout = Object.keys(props.storedLayouts[layoutType])[0];
-        lastActiveLayout = firstStoredLayout;
-      }
-      this.state = {
-        isSettingsCollapsed: true,
-        activeLayout: lastActiveLayout,
-      };
+    ) {
+      lastActiveLayout = props.storedLayouts.LastActiveLayouts[layoutType];
+    } else {
+      // added as a valide fallback when there are no stored last active layouts
+      const firstStoredLayout = Object.keys(props.storedLayouts[layoutType])[0];
+      lastActiveLayout = firstStoredLayout;
     }
-    
-    componentDidCatch() {
-      Toast.error(messages["react.rendering_error"]);
-    }
-    
-    componentWillUnmount() {
-      // do a complete page refresh to make sure all tracing data is garbage
-      // collected and all events are canceled, etc.
-      location.reload();
-    }
-    
-    handleSettingsCollapse = () => {
-      this.setState(prevState => ({
-        isSettingsCollapsed: !prevState.isSettingsCollapsed,
-      }));
+    this.state = {
+      isSettingsCollapsed: true,
+      activeLayout: lastActiveLayout,
     };
-    
-    onLayoutChange = (layoutConfig, layoutName) => {
-      recalculateInputCatcherSizes();
-      window.needsRerender = true;
-      const layoutKey = determineLayout(this.props.initialCommandType.type, this.props.viewMode);
-      storeLayoutConfig(layoutConfig, layoutKey, layoutName);
-    };
-    
-    getLayoutNamesFromCurrentView = (layoutKey): Array<string> =>
+  }
+
+  componentDidCatch() {
+    Toast.error(messages["react.rendering_error"]);
+  }
+
+  componentWillUnmount() {
+    // do a complete page refresh to make sure all tracing data is garbage
+    // collected and all events are canceled, etc.
+    location.reload();
+  }
+
+  handleSettingsCollapse = () => {
+    this.setState(prevState => ({
+      isSettingsCollapsed: !prevState.isSettingsCollapsed,
+    }));
+  };
+
+  onLayoutChange = (layoutConfig, layoutName) => {
+    recalculateInputCatcherSizes();
+    window.needsRerender = true;
+    const layoutKey = determineLayout(this.props.initialCommandType.type, this.props.viewMode);
+    storeLayoutConfig(layoutConfig, layoutKey, layoutName);
+  };
+
+  getLayoutNamesFromCurrentView = (layoutKey): Array<string> =>
     this.props.storedLayouts[layoutKey] ? Object.keys(this.props.storedLayouts[layoutKey]) : [];
-    
-    render() {
-      const layoutType = determineLayout(this.props.initialCommandType.type, this.props.viewMode);
-      const currentLayoutNames = this.getLayoutNamesFromCurrentView(layoutType);
-      const { displayScalebars } = this.props;
-      
-      return (
-        <NmlUploadZoneContainer onImport={importNmls} isAllowed={this.props.isUpdateTracingAllowed}>
+
+  render() {
+    const layoutType = determineLayout(this.props.initialCommandType.type, this.props.viewMode);
+    const currentLayoutNames = this.getLayoutNamesFromCurrentView(layoutType);
+    const { displayScalebars } = this.props;
+
+    return (
+      <NmlUploadZoneContainer onImport={importNmls} isAllowed={this.props.isUpdateTracingAllowed}>
         <OxalisController
           initialTracingType={this.props.initialTracingType}
           initialCommandType={this.props.initialCommandType}
         />
 
         <Layout className="tracing-layout">
-          <Header style={{ height: Constants.HEADER_HEIGHT, flex: "0 1 auto", zIndex: 210 }}>
+          <Header style={{ height: headerHeight, flex: "0 1 auto", zIndex: 210 }}>
             <ButtonComponent onClick={this.handleSettingsCollapse}>
               <Icon type={this.state.isSettingsCollapsed ? "menu-unfold" : "menu-fold"} />
               <span className="hide-on-small-screen">Settings</span>
