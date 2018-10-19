@@ -280,7 +280,7 @@ class TracingActionsView extends PureComponent<Props, State> {
     const modals = [];
     if (restrictions.allowFinish) {
       elements.push(
-        <Menu.Item key="finish-button">
+        <Menu.Item key="finish-button" className="dropdown-menu-item-with-wrapper">
           <div onClick={this.handleFinish}>
             <Icon type="check-circle-o" />
             {archiveButtonText}
@@ -290,7 +290,7 @@ class TracingActionsView extends PureComponent<Props, State> {
     }
     if (restrictions.allowDownload) {
       elements.push(
-        <Menu.Item key="download-button">
+        <Menu.Item key="download-button" className="dropdown-menu-item-with-wrapper">
           <div onClick={this.handleDownload}>
             <Icon type="download" />
             Download
@@ -299,7 +299,7 @@ class TracingActionsView extends PureComponent<Props, State> {
       );
     }
     elements.push(
-      <Menu.Item key="share-button">
+      <Menu.Item key="share-button" className="dropdown-menu-item-with-wrapper">
         <div onClick={this.handleShareOpen}>
           <Icon type="share-alt" />
           Share
@@ -314,7 +314,7 @@ class TracingActionsView extends PureComponent<Props, State> {
       />,
     );
     elements.push(
-      <Menu.Item key="user-scripts-button">
+      <Menu.Item key="user-scripts-button" className="dropdown-menu-item-with-wrapper">
         <div onClick={this.handleUserScriptsOpen}>
           <Icon type="setting" />
           Add Script
@@ -331,7 +331,7 @@ class TracingActionsView extends PureComponent<Props, State> {
 
     if (isSkeletonMode && this.props.activeUser != null) {
       elements.push(
-        <Menu.Item key="merge-button">
+        <Menu.Item className="dropdown-menu-item-with-wrapper" key="merge-button">
           <div onClick={this.handleMergeOpen}>
             <Icon type="folder-open" />
             Merge Tracing
