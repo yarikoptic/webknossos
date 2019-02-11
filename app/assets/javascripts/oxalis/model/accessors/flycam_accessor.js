@@ -100,19 +100,16 @@ export function _getMaximumZoomForAllResolutions(
   viewportRects: OrthoViewRects,
 ): Array<number> {
   const maximumCapacity = constants.MINIMUM_REQUIRED_BUCKET_CAPACITY;
-  // maximumIterationCount is used as an upper limit to avoid an endless loop, in case
-  // the following while loop causes havoc for some reason (e.g., because
-  // the calculated bucket size isn't strictly increasing anymore). It means,
-  // that even with the best GPU specs and biggest dataset (i.e., many magnifications),
-  // wk will at most zoom out until a zoom value of ZOOM_STEP_INTERVAL**maximumIterationCount.
-  // With the current values, this would indicate a maximum zoom value of ~ 35 000, meaning
-  // that ~ 15 different magnifications (~ log2 of 35000) are supported properly.
-  const maximumIterationCount = 120;
   let currentIterationCount = 0;
   // Since the viewports can be quite large, it can happen that even a zoom value of 1 is not feasible.
   // That's why we start the search with a smaller value than 1. We use the ZOOM_STEP_INTERVAL factor
   // to ensure that the calculated thresholds correspond to the normal zoom behavior.
-  let maxZoomValue = 1 / ZOOM_STEP_INTERVAL ** 20;
+  const bestZoomValueExponent = 20;
+  const initialZoomValue = 1 / ZOOM_STEP_INTERVAL ** bestZoomValueExponent;
+  const maximumIterationCount =
+    bestZoomValueExponent +
+    Math.round(Math.log(2 ** resolutions.length) / Math.log(ZOOM_STEP_INTERVAL));
+  let maxZoomValue = initialZoomValue;
   let currentResolutionIndex = 0;
   const maxZoomValueThresholds = [];
 

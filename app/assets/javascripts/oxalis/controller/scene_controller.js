@@ -270,7 +270,7 @@ class SceneController {
     }
   }
 
-  updateSceneForCam = (id: OrthoView, hidePlanes: boolean = false): void => {
+  updateSceneForCam = (id: OrthoView): void => {
     // This method is called for each of the four cams. Even
     // though they are all looking at the same scene, some
     // things have to be changed for each cam.
@@ -285,7 +285,7 @@ class SceneController {
       for (const planeId of OrthoViewValuesWithoutTDView) {
         if (planeId === id) {
           this.planes[planeId].setOriginalCrosshairColor();
-          this.planes[planeId].setVisible(!hidePlanes);
+          this.planes[planeId].setVisible(true);
           const pos = _.clone(getPosition(Store.getState().flycam));
           ind = Dimensions.getIndices(planeId);
           // Offset the plane so the user can see the skeletonTracing behind the plane
