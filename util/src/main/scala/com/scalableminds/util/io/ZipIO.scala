@@ -4,23 +4,13 @@ import java.io._
 import java.nio.file.{Path, Paths}
 import java.util.zip.{GZIPOutputStream => DefaultGZIPOutputStream, _}
 
-import akka.stream.ActorMaterializer
-import akka.stream.javadsl.StreamConverters
-import akka.stream.scaladsl.Source
-import akka.util.ByteString
-import com.scalableminds.util.tools.TextUtils
-import com.typesafe.scalalogging.LazyLogging
 import net.liftweb.common.{Box, Empty, Failure, Full}
 import net.liftweb.util.Helpers.tryo
-
-import scala.concurrent.duration._
 import org.apache.commons.io.IOUtils
-import play.api.libs.iteratee.{Enumerator, Iteratee}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
 
-object ZipIO extends LazyLogging {
+object ZipIO {
 
   /**
     * Representation of an opened zip file
@@ -28,19 +18,6 @@ object ZipIO extends LazyLogging {
     * @param stream output stream to write to
     */
   case class OpenZip(stream: ZipOutputStream) {
-
-    def addFileFromSource(name: String, source: Source[ByteString, _])(
-        implicit ec: ExecutionContext,
-        materializer: ActorMaterializer): Future[Unit] = {
-
-      stream.putNextEntry(new ZipEntry(name))
-
-      val inputStream: InputStream = source.runWith(StreamConverters.asInputStream)
-
-      val result = Future.successful(IOUtils.copy(inputStream, stream))
-
-      result.map(_ => stream.closeEntry())
-    }
 
     /**
       * Add a file to the zip
@@ -64,34 +41,24 @@ object ZipIO extends LazyLogging {
     `def`.setLevel(compressionLevel)
   }
 
-  def zip(sources: List[NamedStream], out: OutputStream)(implicit ec: ExecutionContext): Future[Unit] =
+  def zip(sources: List[NamedStream], out: OutputStream)(implicit ec: ExecutionContext): Unit =
     zip(sources.toIterator, out)
 
-  def zip(sources: Iterator[NamedStream], out: OutputStream)(implicit ec: ExecutionContext): Future[Unit] =
+  def zip(sources: Iterator[NamedStream], out: OutputStream)(implicit ec: ExecutionContext): Unit =
     if (sources.nonEmpty) {
       val zip = startZip(out)
-      val zipWrittenFuture = zipIterator(sources, zip)
-      zipWrittenFuture.onComplete { _ =>
+      zipIterator(sources, zip).onComplete { _ =>
         zip.close()
       }
-      zipWrittenFuture
-    } else {
+    } else
       out.close()
-      Future.successful(())
-    }
 
   private def zipIterator(sources: Iterator[NamedStream], zip: OpenZip)(implicit ec: ExecutionContext): Future[Unit] =
     if (!sources.hasNext) {
       Future.successful(())
     } else {
-      try {
-        val s = sources.next
-        zip.withFile(s.normalizedName)(s.writeTo).flatMap(_ => zipIterator(sources, zip))
-      } catch {
-        case e: Exception => {
-          logger.debug("Error packing zip: " + TextUtils.stackTraceAsString(e)); throw new Exception(e.getMessage)
-        }
-      }
+      val s = sources.next
+      zip.withFile(s.normalizedName)(s.writeTo).flatMap(_ => zipIterator(sources, zip))
     }
 
   def startZip(out: OutputStream)(implicit ec: ExecutionContext) =
