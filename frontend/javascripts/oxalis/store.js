@@ -300,6 +300,7 @@ export type UserConfiguration = {|
   +moveValue3d: number,
   +moveValue: number,
   +newNodeNewTree: boolean,
+  +centerNewNode: boolean,
   +overrideNodeRadius: boolean,
   +particleSize: number,
   +rotateValue: number,
@@ -453,11 +454,11 @@ type UiInformation = {
   +isRefreshingIsosurfaces: boolean,
 };
 
-type IsosurfaceInformation = {
+export type IsosurfaceInformation = {|
   +segmentId: number,
   +seedPosition: Vector3,
   +isLoading: boolean,
-};
+|};
 
 export type OxalisState = {|
   +datasetConfiguration: DatasetConfiguration,
@@ -471,7 +472,7 @@ export type OxalisState = {|
   +viewModeData: ViewModeData,
   +activeUser: ?APIUser,
   +uiInformation: UiInformation,
-  +isosurfaces: { [segmentId: string]: IsosurfaceInformation },
+  +isosurfaces: { [segmentId: number]: IsosurfaceInformation },
 |};
 
 const sagaMiddleware = createSagaMiddleware();
