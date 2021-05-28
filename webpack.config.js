@@ -6,7 +6,6 @@ module.exports = function(env = {}) {
   const TerserPlugin = require("terser-webpack-plugin");
   const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-  // const HardSourceWebpackPlugin = require("hard-source-webpack-plugin");
   const CopyWebpackPlugin = require("copy-webpack-plugin");
 
   var srcPath = path.resolve(__dirname, "frontend/javascripts/");
@@ -24,8 +23,16 @@ module.exports = function(env = {}) {
       filename: "[name].css",
       chunkFilename: "[name].css",
     }),
-    new CopyWebpackPlugin([{ from: "./public/tf-models/**", to: "tf-models", flatten: true }], {
-      dot: true,
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: "./public/tf-models/**",
+          to: "tf-models[name][ext]",
+          globOptions: {
+            dot: true,
+          },
+        },
+      ],
     }),
   ];
 
