@@ -4,6 +4,7 @@ import akka.util.Timeout
 import com.mohiva.play.silhouette.api.Silhouette
 import com.scalableminds.util.accesscontext.{DBAccessContext, GlobalAccessContext}
 import com.scalableminds.util.tools.{Fox, FoxImplicits}
+import com.scalableminds.webknossos.datastore.controllers.RemoteOriginHelpers
 import com.scalableminds.webknossos.tracingstore.tracings.TracingType
 import models.annotation.AnnotationState.Cancelled
 import models.annotation._
@@ -51,6 +52,7 @@ class AnnotationController @Inject()(
     conf: WkConf,
     sil: Silhouette[WkEnv])(implicit ec: ExecutionContext, bodyParsers: PlayBodyParsers)
     extends Controller
+    with RemoteOriginHelpers
     with FoxImplicits {
 
   implicit val timeout: Timeout = Timeout(5 seconds)
@@ -58,26 +60,28 @@ class AnnotationController @Inject()(
 
   def info(typ: String, id: String, timestamp: Long): Action[AnyContent] = sil.UserAwareAction.async {
     implicit request =>
-      log() {
-        val notFoundMessage =
-          if (request.identity.isEmpty) "annotation.notFound.considerLoggingIn" else "annotation.notFound"
-        for {
-          annotation <- provider.provideAnnotation(typ, id, request.identity) ?~> notFoundMessage ~> NOT_FOUND
-          _ <- bool2Fox(annotation.state != Cancelled) ?~> "annotation.cancelled"
-          restrictions <- provider.restrictionsFor(typ, id) ?~> "restrictions.notFound" ~> NOT_FOUND
-          _ <- restrictions.allowAccess(request.identity) ?~> "notAllowed" ~> FORBIDDEN
-          typedTyp <- AnnotationType.fromString(typ).toFox ?~> "annotationType.notFound" ~> NOT_FOUND
-          js <- annotationService
-            .publicWrites(annotation, request.identity, Some(restrictions)) ?~> "annotation.write.failed"
-          _ <- Fox.runOptional(request.identity) { user =>
-            if (typedTyp == AnnotationType.Task || typedTyp == AnnotationType.Explorational) {
-              timeSpanService.logUserInteraction(timestamp, user, annotation) // log time when a user starts working
-            } else Fox.successful(())
-          }
-          _ = request.identity.map { user =>
-            analyticsService.track(OpenAnnotationEvent(user, annotation))
-          }
-        } yield Ok(js)
+      AllowRemoteOrigin {
+        log() {
+          val notFoundMessage =
+            if (request.identity.isEmpty) "annotation.notFound.considerLoggingIn" else "annotation.notFound"
+          for {
+            annotation <- provider.provideAnnotation(typ, id, request.identity) ?~> notFoundMessage ~> NOT_FOUND
+            _ <- bool2Fox(annotation.state != Cancelled) ?~> "annotation.cancelled"
+            restrictions <- provider.restrictionsFor(typ, id) ?~> "restrictions.notFound" ~> NOT_FOUND
+            _ <- restrictions.allowAccess(request.identity) ?~> "notAllowed" ~> FORBIDDEN
+            typedTyp <- AnnotationType.fromString(typ).toFox ?~> "annotationType.notFound" ~> NOT_FOUND
+            js <- annotationService
+              .publicWrites(annotation, request.identity, Some(restrictions)) ?~> "annotation.write.failed"
+            _ <- Fox.runOptional(request.identity) { user =>
+              if (typedTyp == AnnotationType.Task || typedTyp == AnnotationType.Explorational) {
+                timeSpanService.logUserInteraction(timestamp, user, annotation) // log time when a user starts working
+              } else Fox.successful(())
+            }
+            _ = request.identity.map { user =>
+              analyticsService.track(OpenAnnotationEvent(user, annotation))
+            }
+          } yield Ok(js)
+        }
       }
   }
 
