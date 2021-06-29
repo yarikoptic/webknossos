@@ -13,6 +13,7 @@ import com.scalableminds.util.tools.{Fox, FoxImplicits, TextUtils}
 import com.scalableminds.webknossos.datastore.models.datasource.{AbstractSegmentationLayer, SegmentationLayer}
 import com.scalableminds.webknossos.datastore.SkeletonTracing.{SkeletonTracing, SkeletonTracingOpt, SkeletonTracings}
 import com.scalableminds.webknossos.datastore.VolumeTracing.{VolumeTracing, VolumeTracingOpt, VolumeTracings}
+import com.scalableminds.webknossos.datastore.controllers.RemoteOriginHelpers
 import com.scalableminds.webknossos.datastore.helpers.ProtoGeometryImplicits
 import com.scalableminds.webknossos.tracingstore.tracings.volume.VolumeTracingDefaults
 import com.scalableminds.webknossos.tracingstore.tracings.TracingType
@@ -56,6 +57,7 @@ class AnnotationIOController @Inject()(
     provider: AnnotationInformationProvider,
     nmlService: NmlService)(implicit ec: ExecutionContext, val materializer: Materializer)
     extends Controller
+    with RemoteOriginHelpers
     with FoxImplicits
     with ProtoGeometryImplicits
     with LazyLogging {
@@ -207,25 +209,28 @@ class AnnotationIOController @Inject()(
                volumeVersion: Option[Long],
                skipVolumeData: Option[Boolean]): Action[AnyContent] =
     sil.SecuredAction.async { implicit request =>
-      logger.trace(s"Requested download for annotation: $typ/$id")
-      for {
-        identifier <- AnnotationIdentifier.parse(typ, id)
-        _ = analyticsService.track(DownloadAnnotationEvent(request.identity, id, typ))
-        result <- identifier.annotationType match {
-          case AnnotationType.View            => Fox.failure("Cannot download View annotation")
-          case AnnotationType.CompoundProject => downloadProject(id, request.identity, skipVolumeData.getOrElse(false))
-          case AnnotationType.CompoundTask    => downloadTask(id, request.identity, skipVolumeData.getOrElse(false))
-          case AnnotationType.CompoundTaskType =>
-            downloadTaskType(id, request.identity, skipVolumeData.getOrElse(false))
-          case _ =>
-            downloadExplorational(id,
-                                  typ,
-                                  request.identity,
-                                  skeletonVersion,
-                                  volumeVersion,
-                                  skipVolumeData.getOrElse(false))
-        }
-      } yield result
+      AllowRemoteOrigin {
+        logger.trace(s"Requested download for annotation: $typ/$id")
+        for {
+          identifier <- AnnotationIdentifier.parse(typ, id)
+          _ = analyticsService.track(DownloadAnnotationEvent(request.identity, id, typ))
+          result <- identifier.annotationType match {
+            case AnnotationType.View => Fox.failure("Cannot download View annotation")
+            case AnnotationType.CompoundProject =>
+              downloadProject(id, request.identity, skipVolumeData.getOrElse(false))
+            case AnnotationType.CompoundTask => downloadTask(id, request.identity, skipVolumeData.getOrElse(false))
+            case AnnotationType.CompoundTaskType =>
+              downloadTaskType(id, request.identity, skipVolumeData.getOrElse(false))
+            case _ =>
+              downloadExplorational(id,
+                                    typ,
+                                    request.identity,
+                                    skeletonVersion,
+                                    volumeVersion,
+                                    skipVolumeData.getOrElse(false))
+          }
+        } yield result
+      }
     }
 
   private def downloadExplorational(annotationId: String,
