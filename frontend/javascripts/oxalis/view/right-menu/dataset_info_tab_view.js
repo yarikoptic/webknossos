@@ -4,15 +4,16 @@
  */
 import type { Dispatch } from "redux";
 import { Tooltip, Button } from "antd";
-import { EditOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { EditOutlined, InfoCircleOutlined, CopyOutlined } from "@ant-design/icons";
 import { connect } from "react-redux";
 import Markdown from "react-remarkable";
 import React from "react";
 import { Link } from "react-router-dom";
+import Clipboard from "clipboard-js";
 
 import { APIAnnotationTypeEnum, type APIDataset, type APIUser } from "types/api_flow_types";
 import { ControlModeEnum, type Vector3 } from "oxalis/constants";
-import { convertToHybridTracing } from "admin/admin_rest_api";
+import { convertToHybridTracing, getAuthToken } from "admin/admin_rest_api";
 import { formatScale } from "libs/format_utils";
 import { getBaseVoxel } from "oxalis/model/scaleinfo";
 import { getDatasetExtentAsString, getResolutions } from "oxalis/model/accessors/dataset_accessor";
@@ -27,6 +28,7 @@ import ButtonComponent from "oxalis/view/components/button_component";
 import EditableTextLabel from "oxalis/view/components/editable_text_label";
 import Model from "oxalis/model";
 import Store, { type OxalisState, type Task, type Tracing } from "oxalis/store";
+import Toast from "libs/toast";
 
 type StateProps = {|
   tracing: Tracing,
@@ -41,6 +43,10 @@ type DispatchProps = {|
 |};
 
 type Props = {| ...StateProps, ...DispatchProps |};
+
+type State = {
+  token: string,
+};
 
 const shortcuts = [
   {
@@ -122,7 +128,15 @@ export function convertPixelsToNm(
   return lengthInPixel * zoomValue * getBaseVoxel(dataset.dataSource.scale);
 }
 
-class DatasetInfoTabView extends React.PureComponent<Props> {
+class DatasetInfoTabView extends React.PureComponent<Props, State> {
+  state = {
+    token: "",
+  };
+
+  componentDidMount() {
+    this.getAuthToken();
+  }
+
   setAnnotationName = (newName: string) => {
     this.props.setAnnotationName(newName);
   };
@@ -144,6 +158,52 @@ class DatasetInfoTabView extends React.PureComponent<Props> {
         </p>
       </div>
     ) : null;
+  }
+
+  async getAuthToken() {
+    const token = await getAuthToken();
+    this.setState({ token });
+  }
+
+  getCodeInstructions() {
+    const state = Store.getState();
+
+    const code = `from wknml import NML
+
+nml = await NML.from_wk(
+  id="Explorational/${state.tracing.annotationId}",
+  wk_base_url="https://apiannotationscors.webknossos.xyz",
+  token="${this.state.token}"
+)`;
+    const markdownCode = `\`\`\`
+${code}
+\`\`\``;
+
+    const copyCode = async () => {
+      await Clipboard.copy(code);
+      Toast.success("Code copied to clipboard");
+    };
+
+    return (
+      <div>
+        <Markdown
+          style={{ background: "#f5f5f5" }}
+          source={markdownCode}
+          options={{ html: false, breaks: true, linkify: true }}
+        />
+        <ButtonComponent onClick={copyCode} title="Copy code">
+          <CopyOutlined />
+        </ButtonComponent>
+        <ButtonComponent
+          style={{ marginLeft: 10 }}
+          href="http://0.0.0.0:8000/static/retro/notebooks/?path=nml.ipynb"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Open Interactive Python Environment
+        </ButtonComponent>
+      </div>
+    );
   }
 
   getKeyboardShortcuts(isDatasetViewMode: boolean) {
@@ -455,6 +515,7 @@ class DatasetInfoTabView extends React.PureComponent<Props> {
         </div>
 
         <div className="info-tab-block">{this.getTracingStatistics()}</div>
+        <div className="info-tab-block">{this.getCodeInstructions()}</div>
         {this.getKeyboardShortcuts(isDatasetViewMode)}
         {this.getOrganisationLogo(isDatasetViewMode)}
       </div>
