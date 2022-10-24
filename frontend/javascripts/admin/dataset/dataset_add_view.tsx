@@ -185,7 +185,6 @@ function DatasetAddView({ history }: RouteComponentProps) {
         visible={showAfterUploadContent}
         closable={showAfterUploadContent}
         keyboard={showAfterUploadContent}
-        maskClosable={false}
         className="no-footer-modal"
         cancelButtonProps={{
           style: {

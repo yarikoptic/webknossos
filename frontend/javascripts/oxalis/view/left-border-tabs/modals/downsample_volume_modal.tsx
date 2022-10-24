@@ -28,7 +28,6 @@ export default function DownsampleVolumeModal({
       onCancel={isDownsampling ? null : hideDownsampleVolumeModal}
       footer={null}
       width={800}
-      maskClosable={false}
       visible
     >
       <p>

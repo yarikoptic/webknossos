@@ -247,7 +247,6 @@ class ExperienceModalView extends React.PureComponent<Props, State> {
         visible={this.props.visible}
         onCancel={this.props.onCancel}
         width={multipleUsers ? 800 : 600}
-        maskClosable={false}
         footer={
           <div>
             <Button type="primary" onClick={this.updateAllUsers}>
