@@ -1,5 +1,7 @@
 package com.scalableminds.webknossos.datastore.services
 
+import brave.play.{TraceData, ZipkinTraceServiceLike}
+import brave.play.implicits.ZipkinTraceImplicits
 import com.google.inject.Inject
 import com.scalableminds.util.geometry.Vec3Int
 import com.scalableminds.util.tools.Math
@@ -17,10 +19,12 @@ import scala.concurrent.ExecutionContext
 case class Histogram(elementCounts: Array[Long], numberOfElements: Int, min: Double, max: Double)
 object Histogram { implicit val jsonFormat: OFormat[Histogram] = Json.format[Histogram] }
 
-class FindDataService @Inject()(dataServicesHolder: BinaryDataServiceHolder)(implicit ec: ExecutionContext)
+class FindDataService @Inject()(dataServicesHolder: BinaryDataServiceHolder, val tracer: ZipkinTraceServiceLike)(
+    implicit ec: ExecutionContext)
     extends DataConverter
     with DataFinder
-    with FoxImplicits {
+    with FoxImplicits
+    with ZipkinTraceImplicits {
   val binaryDataService: BinaryDataService = dataServicesHolder.binaryDataService
 
   private def getDataFor(dataSource: DataSource,
@@ -164,7 +168,8 @@ class FindDataService @Inject()(dataServicesHolder: BinaryDataServiceHolder)(imp
     } yield meanAndStdDev
   }
 
-  def createHistogram(dataSource: DataSource, dataLayer: DataLayer): Fox[List[Histogram]] = {
+  def createHistogram(dataSource: DataSource, dataLayer: DataLayer)(
+      implicit traceData: TraceData): Fox[List[Histogram]] = {
 
     def calculateHistogramValues(data: Array[_ >: UByte with UShort with UInt with ULong with Float],
                                  bytesPerElement: Int,
@@ -216,9 +221,11 @@ class FindDataService @Inject()(dataServicesHolder: BinaryDataServiceHolder)(imp
         convertedData = toUnsigned(filterZeroes(convertData(dataConcatenated, dataLayer.elementClass), skip = isUint24))
       } yield calculateHistogramValues(convertedData, dataLayer.bytesPerElement, isUint24)
 
-    if (dataLayer.resolutions.nonEmpty)
-      histogramForPositions(createPositions(dataLayer, 2).distinct, dataLayer.resolutions.minBy(_.maxDim))
-    else
+    if (dataLayer.resolutions.nonEmpty) {
+      tracer.traceFuture("create histogram") { implicit traceData =>
+        histogramForPositions(createPositions(dataLayer, 2).distinct, dataLayer.resolutions.minBy(_.maxDim))
+      }
+    } else
       Fox.empty ?~> "dataSet.noResolutions"
   }
 }

@@ -1,6 +1,8 @@
 package controllers
 
 import akka.actor.ActorSystem
+import brave.play.ZipkinTraceServiceLike
+import brave.play.implicits.ZipkinTraceImplicits
 import com.mohiva.play.silhouette.api.Silhouette
 import com.scalableminds.util.tools.{Fox, FoxImplicits}
 import com.typesafe.config.ConfigRenderOptions
@@ -19,17 +21,20 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
 @Api
-class Application @Inject()(multiUserDAO: MultiUserDAO,
-                            actorSystem: ActorSystem,
-                            analyticsService: AnalyticsService,
-                            userService: UserService,
-                            releaseInformationDAO: ReleaseInformationDAO,
-                            organizationDAO: OrganizationDAO,
-                            conf: WkConf,
-                            defaultMails: DefaultMails,
-                            storeModules: StoreModules,
-                            sil: Silhouette[WkEnv])(implicit ec: ExecutionContext, bodyParsers: PlayBodyParsers)
-    extends Controller {
+class Application @Inject()(
+    multiUserDAO: MultiUserDAO,
+    actorSystem: ActorSystem,
+    analyticsService: AnalyticsService,
+    userService: UserService,
+    releaseInformationDAO: ReleaseInformationDAO,
+    organizationDAO: OrganizationDAO,
+    conf: WkConf,
+    defaultMails: DefaultMails,
+    storeModules: StoreModules,
+    sil: Silhouette[WkEnv],
+    val tracer: ZipkinTraceServiceLike)(implicit ec: ExecutionContext, bodyParsers: PlayBodyParsers)
+    extends Controller
+    with ZipkinTraceImplicits {
 
   private lazy val Mailer =
     actorSystem.actorSelection("/user/mailActor")
@@ -73,8 +78,10 @@ class Application @Inject()(multiUserDAO: MultiUserDAO,
   }
 
   @ApiOperation(value = "Health endpoint")
-  def health: Action[AnyContent] = Action {
-    addNoCacheHeaderFallback(Ok("Ok"))
+  def health: Action[AnyContent] = Action { implicit request =>
+    tracer.trace("sync") { implicit traceData =>
+      addNoCacheHeaderFallback(Ok("Ok"))
+    }
   }
 
   @ApiOperation(hidden = true, value = "")

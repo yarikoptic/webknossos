@@ -1,5 +1,7 @@
 package com.scalableminds.webknossos.datastore.controllers
 
+import brave.play.ZipkinTraceServiceLike
+import brave.play.implicits.ZipkinTraceImplicits
 import com.google.inject.Inject
 import com.scalableminds.util.geometry.Vec3Int
 import com.scalableminds.util.image.{ImageCreator, ImageCreatorParameters, JPEGWriter}
@@ -22,8 +24,8 @@ import net.liftweb.util.Helpers.tryo
 import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc._
-import scala.concurrent.duration.DurationInt
 
+import scala.concurrent.duration.DurationInt
 import java.io.ByteArrayOutputStream
 import java.nio.{ByteBuffer, ByteOrder}
 import scala.concurrent.ExecutionContext
@@ -38,9 +40,11 @@ class BinaryDataController @Inject()(
     slackNotificationService: DSSlackNotificationService,
     isosurfaceServiceHolder: IsosurfaceServiceHolder,
     findDataService: FindDataService,
+    val tracer: ZipkinTraceServiceLike
 )(implicit ec: ExecutionContext, bodyParsers: PlayBodyParsers)
     extends Controller
-    with MissingBucketHeaders {
+    with MissingBucketHeaders
+    with ZipkinTraceImplicits {
 
   override def allowRemoteOrigin: Boolean = true
 
@@ -306,16 +310,20 @@ class BinaryDataController @Inject()(
                 dataSetName: String,
                 dataLayerName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      accessTokenService.validateAccess(UserAccessRequest.readDataSources(DataSourceId(dataSetName, organizationName)),
-                                        urlOrHeaderToken(token, request)) {
-        for {
-          (dataSource, dataLayer) <- dataSourceRepository.getDataSourceAndDataLayer(organizationName,
-                                                                                    dataSetName,
-                                                                                    dataLayerName) ?~> Messages(
-            "dataSource.notFound") ~> NOT_FOUND ?~> Messages("histogram.layerMissing", dataLayerName)
-          listOfHistograms <- findDataService.createHistogram(dataSource, dataLayer) ?~> Messages("histogram.failed",
-                                                                                                  dataLayerName)
-        } yield Ok(Json.toJson(listOfHistograms))
+      tracer.traceFuture("histogram") { _ =>
+        accessTokenService.validateAccess(
+          UserAccessRequest.readDataSources(DataSourceId(dataSetName, organizationName)),
+          urlOrHeaderToken(token, request)) {
+          for {
+            (dataSource, dataLayer) <- dataSourceRepository.getDataSourceAndDataLayer(organizationName,
+                                                                                      dataSetName,
+                                                                                      dataLayerName) ?~> Messages(
+              "dataSource.notFound") ~> NOT_FOUND ?~> Messages("histogram.layerMissing", dataLayerName)
+
+            listOfHistograms <- findDataService.createHistogram(dataSource, dataLayer) ?~> Messages("histogram.failed",
+                                                                                                    dataLayerName)
+          } yield Ok(Json.toJson(listOfHistograms))
+        }
       }
     }
 
