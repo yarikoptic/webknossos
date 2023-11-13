@@ -13,6 +13,7 @@ import {
 } from "@ant-design/icons";
 import { connect } from "react-redux";
 import React from "react";
+
 import type { APIUser, APITask, APIAnnotation } from "types/api_flow_types";
 import type { OxalisState } from "oxalis/store";
 import { formatSeconds } from "libs/format_utils";
@@ -197,12 +198,28 @@ class TaskAnnotationView extends React.PureComponent<Props, State> {
         <table>
           <tbody>
             {this.state.annotations.map((annotation: APIAnnotation) => {
+              let treeCount = 0
+              
+              if ("treeCount" in annotation.stats) {
+                treeCount = annotation.stats.treeCount;
+              }
+
               const userString = annotation.owner
                 ? `${annotation.owner.firstName} ${annotation.owner.lastName} ( ${annotation.owner.email} )`
                 : "<no user>";
               return (
                 <tr key={`${annotation.id}-tr`}>
                   <td>{userString}</td>
+                  <td>
+                    <img
+                      className="info-tab-icon"
+                      src="/assets/images/icon-skeletons.svg"
+                      alt="Skeletons"
+                    />
+                    <span style={{marginLeft: 10}}>
+                      {treeCount} Skeletons
+                    </span>
+                  </td>
                   <td>
                     <FormattedDate timestamp={annotation.modified} />
                   </td>

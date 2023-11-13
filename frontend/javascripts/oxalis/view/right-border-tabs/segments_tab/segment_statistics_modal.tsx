@@ -1,17 +1,18 @@
-import { getSegmentBoundingBoxes, getSegmentVolumes } from "admin/admin_rest_api";
+import React from "react";
 import { Modal, Spin, Table } from "antd";
 import saveAs from "file-saver";
 import { formatNumberToVolume } from "libs/format_utils";
 import { useFetch } from "libs/react_helpers";
+
 import { Vector3 } from "oxalis/constants";
 import { getResolutionInfo } from "oxalis/model/accessors/dataset_accessor";
 import { Segment } from "oxalis/store";
-import React from "react";
-import { SegmentHierarchyNode, SegmentHierarchyGroup } from "./segments_view_helper";
 import { Store, api } from "oxalis/singletons";
 import { APISegmentationLayer } from "types/api_flow_types";
 import { voxelToNm3 } from "oxalis/model/scaleinfo";
 import { getBoundingBoxInMag1 } from "oxalis/model/sagas/volume/helpers";
+import { getSegmentBoundingBoxes, getSegmentVolumes } from "admin/admin_rest_api";
+import { SegmentHierarchyNode, SegmentHierarchyGroup } from "./segments_view_helper";
 
 const SEGMENT_STATISTICS_CSV_HEADER =
   "segmendId,segmentName,groupId,groupName,volumeInVoxel,volumeInNm3,boundingBoxTopLeftPositionX,boundingBoxTopLeftPositionY,boundingBoxTopLeftPositionZ,boundingBoxSizeX,boundingBoxSizeY,boundingBoxSizeZ";
